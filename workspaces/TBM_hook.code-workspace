@@ -1,0 +1,15 @@
+{
+   "folders": [
+      {
+         "name": "TBM_hook",
+         "path": "..\\..\\..\\TBM_hook\\dev"
+      }
+   ],
+   "settings": {
+      "files.exclude": {
+         "**/.git**": true,
+         "**/README.**": true,
+         "build/": true
+      }
+   }
+}
