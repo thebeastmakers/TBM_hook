@@ -12,7 +12,7 @@ tools = []
 
 requires = []
 
-build_requires = ['python-2']
+build_requires = ['python-2', "TBM_RezManager"]
 
 timestamp = 1677664384
 
