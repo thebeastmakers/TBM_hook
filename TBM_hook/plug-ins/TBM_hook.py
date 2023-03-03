@@ -60,71 +60,70 @@ kPluginNodeId = OpenMaya.MTypeId(0x00132748)
 
 # Node definition
 class TBM_Hook(OpenMayaMPx.MPxNode):
-	# class variables
-	aTarget = OpenMaya.MObject()
-	aInputAdaptMatrices = OpenMaya.MObject()
-	aOutputHookMatrix = OpenMaya.MObject()
-	
-	def __init__(self):
-		OpenMayaMPx.MPxNode.__init__(self)
+    # class variables
+    aTarget = OpenMaya.MObject()
+    aInputAdaptMatrices = OpenMaya.MObject()
+    aOutputHookMatrix = OpenMaya.MObject()
 
-	def compute(self, plug, data):
-		# Check that the requested recompute is one of the output values
-		if (plug == TBM_Hook.aOutputHookMatrix):
-			# Read the input values
-			adaptMatArray = data.inputArrayValue(TBM_Hook.aInputAdaptMatrices)
-			matrix = data.inputValue(self.aTarget).asMatrix()
-			# Store them on the output plugs
-			matrixHandle = data.outputValue(TBM_Hook.aOutputHookMatrix)
-			matrixHandle.setMMatrix(matrix)
-			data.setClean(plug)
-		else:
-			return OpenMaya.kUnknownParameter
-		return None
+    def __init__(self):
+        OpenMayaMPx.MPxNode.__init__(self)
+        
+    @classmethod
+    def creator(cls):
+        return TBM_Hook()
+    
+    @classmethod
+    def initialize(cls):
+        compoundAttr = OpenMaya.MFnCompoundAttribute()
+        matrixAttr = OpenMaya.MFnMatrixAttribute()
 
+        # Setup the input attributes
+        cls.aInputAdaptMatrices = matrixAttr.create("inputAdaptMatrices", "inam")
+        matrixAttr.setArray(True)
+        matrixAttr.setStorable(True)
+        matrixAttr.setWritable(True)
 
-# creator
-def nodeCreator():
-	return OpenMayaMPx.asMPxPtr( TBM_Hook() )
+        cls.aTarget = matrixAttr.create("target", "tgt")
+        matrixAttr.setStorable(True)
+        matrixAttr.setWritable(True)
 
+        # Setup the output attributes
+        cls.aOutputHookMatrix = matrixAttr.create("outputHookMatrix", "okm")
+        matrixAttr.setWritable(True)
+        matrixAttr.setStorable(True)
 
-# initializer
-def nodeInitializer():
-	matrixAttr = OpenMaya.MFnMatrixAttribute()
-	typedAttr = OpenMaya.MFnMessageAttribute()
+        m_in = compoundAttr.create("hooks", "hook")
+        compoundAttr.setArray(True)
+        compoundAttr.addChild(cls.aTarget)
+        compoundAttr.addChild(cls.aOutputHookMatrix)
 
-	# Setup the input attributes
-	TBM_Hook.aInputAdaptMatrices = matrixAttr.create("inputAdaptMatrices", "inam")
-	matrixAttr.setArray(True)
-	matrixAttr.setStorable(True)
-	matrixAttr.setWritable(True)
+        # add attributes
+        cls.addAttribute(m_in)
+        cls.addAttribute(cls.aInputAdaptMatrices)
 
-	TBM_Hook.aTarget = matrixAttr.create("target", "tgt")
-	matrixAttr.setStorable(True)
-	matrixAttr.setWritable(True)
-
-
-	# Setup the output attributes
-	TBM_Hook.aOutputHookMatrix = matrixAttr.create("outputHookMatrix", "okm")
-	matrixAttr.setWritable(True)
-	matrixAttr.setStorable(True)
-
-	# Add the attributes to the node
-	TBM_Hook.addAttribute(TBM_Hook.aInputAdaptMatrices)
-	TBM_Hook.addAttribute(TBM_Hook.aTarget)
-	TBM_Hook.addAttribute(TBM_Hook.aOutputHookMatrix)
-
-	# Set the attribute dependencies
-	#TBM_Hook.attributeAffects(TBM_Hook.aTarget, TBM_Hook.aOutputHookMatrix)
-	TBM_Hook.attributeAffects(TBM_Hook.aInputAdaptMatrices, TBM_Hook.aOutputHookMatrix)
+        # Set the attribute dependencies
+        cls.attributeAffects(cls.aInputAdaptMatrices, cls.aOutputHookMatrix)
 
 
+    def compute(self, plug, data):
+        # Check that the requested recompute is one of the output values
+        if (plug == TBM_Hook.aOutputHookMatrix):
+            # Read the input values
+            adaptMatArray = data.inputArrayValue(TBM_Hook.aInputAdaptMatrices)
+            matrix = data.inputValue(self.aTarget).asMatrix()
+            # Store them on the output plugs
+            matrixHandle = data.outputValue(TBM_Hook.aOutputHookMatrix)
+            matrixHandle.setMMatrix(matrix)
+            data.setClean(plug)
+        else:
+            return OpenMaya.kUnknownParameter
+        return None
 
 # initialize the script plug-in
 def initializePlugin(mobject):
 	mplugin = OpenMayaMPx.MFnPlugin(mobject, "The Beast Makers", "1.0", "Any")
 	try:
-		mplugin.registerNode( kPluginNodeTypeName, kPluginNodeId, nodeCreator, nodeInitializer )
+		mplugin.registerNode( kPluginNodeTypeName, kPluginNodeId, TBM_Hook.creator, TBM_Hook.initialize )
 	except:
 		sys.stderr.write( "Failed to register node: %s" % kPluginNodeTypeName )
 		raise
