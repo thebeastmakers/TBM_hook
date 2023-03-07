@@ -61,6 +61,8 @@ kPluginNodeId = OpenMaya.MTypeId(0x00132748)
 # Node definition
 class TBM_Hook(OpenMayaMPx.MPxNode):
     # class variables
+    m_hooks = OpenMaya.MObject()
+    m_input_attributes = OpenMaya.MObject()
     aTarget = OpenMaya.MObject()
     aInputAdaptMatrices = OpenMaya.MObject()
     aOutputHookMatrix = OpenMaya.MObject()
@@ -76,6 +78,7 @@ class TBM_Hook(OpenMayaMPx.MPxNode):
     def initialize(cls):
         compoundAttr = OpenMaya.MFnCompoundAttribute()
         matrixAttr = OpenMaya.MFnMatrixAttribute()
+        msgAttr = OpenMaya.MFnMessageAttribute()
 
         # Setup the input attributes
         cls.aInputAdaptMatrices = matrixAttr.create("inputAdaptMatrices", "inam")
@@ -92,18 +95,22 @@ class TBM_Hook(OpenMayaMPx.MPxNode):
         matrixAttr.setWritable(True)
         matrixAttr.setStorable(True)
 
-        m_in = compoundAttr.create("hooks", "hook")
+        cls.m_hooks = compoundAttr.create("hooks", "hook")
         compoundAttr.setArray(True)
         compoundAttr.addChild(cls.aTarget)
         compoundAttr.addChild(cls.aOutputHookMatrix)
 
+        cls.m_input_attributes = msgAttr.create("inputAttributes", "ia")
+        msgAttr.setArray(True)
+
         # add attributes
-        cls.addAttribute(m_in)
+        cls.addAttribute(cls.m_hooks)
         cls.addAttribute(cls.aInputAdaptMatrices)
+        cls.addAttribute(cls.m_input_attributes)
 
         # Set the attribute dependencies
         cls.attributeAffects(cls.aInputAdaptMatrices, cls.aOutputHookMatrix)
-
+        cls.attributeAffects(cls.m_input_attributes, cls.aOutputHookMatrix)
 
     def compute(self, plug, data):
         # Check that the requested recompute is one of the output values
